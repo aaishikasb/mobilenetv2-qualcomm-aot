@@ -58,6 +58,7 @@ android {
   }
 
   if (enableNpu) {
+    /*
     assetPacks.add(":ai_pack:mobilenet_v2_sm8750")
 
     dynamicFeatures.add(":litert_npu_runtime_libraries:qualcomm_runtime_v81")
@@ -65,10 +66,11 @@ android {
     bundle {
       deviceTargetingConfig = file("device_targeting_configuration.xml")
       deviceGroup {
-        enableSplit = true
+        enableSplit = false
         defaultGroup = "other"
       }
     }
+    */
   }
 }
 
@@ -130,9 +132,11 @@ dependencies {
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.litert)
 
+  /*
   if (enableNpu) {
     implementation(project(":litert_npu_runtime_libraries:runtime_strings"))
   }
+  */
 
   testImplementation(libs.junit)
   debugImplementation(libs.androidx.ui.tooling)
