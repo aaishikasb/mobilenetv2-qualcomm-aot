@@ -1,11 +1,11 @@
 <config:device-targeting-config
     xmlns:config="http://schemas.android.com/apk/config">
-    <config:device-group name="Qualcomm_SM8850">
+    <config:device-group name="Qualcomm_sm8750">
         <config:device-selector>
-            <config:system-on-chip manufacturer="Qualcomm" model="SM8850"/>
+            <config:system-on-chip manufacturer="Qualcomm" model="sm8750"/>
         </config:device-selector>
         <config:device-selector>
-            <config:system-on-chip manufacturer="QTI" model="SM8850"/>
+            <config:system-on-chip manufacturer="QTI" model="sm8750"/>
         </config:device-selector>
     </config:device-group>
 </config:device-targeting-config>

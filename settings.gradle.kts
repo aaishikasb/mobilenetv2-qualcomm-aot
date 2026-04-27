@@ -28,14 +28,14 @@ val enableNpu =
   providers.gradleProperty("enableNpu").map(String::toBoolean).orElse(false).get()
 
 if (enableNpu) {
-  val aiPackModule = file("ai_pack/mobilenet_v2_sm8850/build.gradle.kts")
+  val aiPackModule = file("ai_pack/mobilenet_v2_sm8750/build.gradle.kts")
   if (!aiPackModule.exists()) {
     throw GradleException(
-      "NPU build requested, but ai_pack/mobilenet_v2_sm8850 is missing. " +
-        "Run tools/prepare_aot_sm8850.py first."
+      "NPU build requested, but ai_pack/mobilenet_v2_sm8750 is missing. " +
+        "Run tools/prepare_aot_sm8750.py first."
     )
   }
-  include(":ai_pack:mobilenet_v2_sm8850")
+  include(":ai_pack:mobilenet_v2_sm8750")
 
   val runtimeModules =
     listOf(
@@ -48,7 +48,7 @@ if (enableNpu) {
     if (!file("$modulePath/build.gradle.kts").exists() && !file("$modulePath/build.gradle").exists()) {
       throw GradleException(
         "NPU build requested, but $modulePath is missing. " +
-          "Run tools/prepare_aot_sm8850.py to download LiteRT NPU runtime libraries."
+          "Run tools/prepare_aot_sm8750.py to download LiteRT NPU runtime libraries."
       )
     }
     include(module)

@@ -58,7 +58,7 @@ android {
   }
 
   if (enableNpu) {
-    assetPacks.add(":ai_pack:mobilenet_v2_sm8850")
+    assetPacks.add(":ai_pack:mobilenet_v2_sm8750")
 
     dynamicFeatures.add(":litert_npu_runtime_libraries:qualcomm_runtime_v81")
 
