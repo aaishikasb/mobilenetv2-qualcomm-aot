@@ -23,12 +23,34 @@ class MobilenetClassifier(private val context: Context) : AutoCloseable {
       close()
       labels = loadLabels()
 
+      // Force load Qualcomm libraries in order
+      try {
+        Log.i(TAG, "Pre-loading Qualcomm libraries...")
+        System.loadLibrary("QnnSystem")
+        System.loadLibrary("QnnHtp")
+        Log.i(TAG, "Qualcomm libraries loaded successfully")
+      } catch (e: Exception) {
+        Log.w(TAG, "Failed to pre-load Qualcomm libraries: ${e.message}")
+      }
+
       val start = SystemClock.elapsedRealtime()
       Log.i(TAG, "Requested backend policy: $policy")
 
       val createdSession = when (policy) {
         BackendPolicy.CPU_EMULATOR -> initializeCpu()
         BackendPolicy.NPU_REQUIRED -> initializeNpu()
+        BackendPolicy.AUTO -> {
+          runCatching { initializeNpu() }
+            .recoverCatching {
+              Log.w(TAG, "NPU initialization failed, falling back to GPU: ${it.message}")
+              initializeGpu()
+            }
+            .recoverCatching {
+              Log.w(TAG, "GPU initialization failed, falling back to CPU: ${it.message}")
+              initializeCpu()
+            }
+            .getOrThrow()
+        }
       }
 
       session = createdSession
@@ -71,6 +93,13 @@ class MobilenetClassifier(private val context: Context) : AutoCloseable {
     val compiledModel = CompiledModel.create(context.assets, CPU_MODEL_ASSET, options, null)
     Log.i(TAG, "Selected model source=assets/$CPU_MODEL_ASSET accelerators=[CPU]")
     return ModelSession(compiledModel, "CPU")
+  }
+
+  private fun initializeGpu(): ModelSession {
+    val options = CompiledModel.Options(Accelerator.GPU)
+    val compiledModel = CompiledModel.create(context.assets, CPU_MODEL_ASSET, options, null)
+    Log.i(TAG, "Selected model source=assets/$CPU_MODEL_ASSET accelerators=[GPU]")
+    return ModelSession(compiledModel, "GPU")
   }
 
   private suspend fun initializeNpu(): ModelSession {

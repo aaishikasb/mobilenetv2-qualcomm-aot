@@ -27,6 +27,7 @@ include(":app")
 val enableNpu =
   providers.gradleProperty("enableNpu").map(String::toBoolean).orElse(false).get()
 
+/*
 if (enableNpu) {
   val aiPackModule = file("ai_pack/mobilenet_v2_sm8750/build.gradle.kts")
   if (!aiPackModule.exists()) {
@@ -54,3 +55,4 @@ if (enableNpu) {
     include(module)
   }
 }
+*/

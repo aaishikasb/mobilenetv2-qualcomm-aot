@@ -53,6 +53,11 @@ def main():
         stub_path = source_base / f"lib/aarch64-android/libQnnHtpV{version}Stub.so"
         if stub_path.exists():
             shutil.copy2(stub_path, dest_dir / f"libQnnHtpV{version}Stub.so")
+        
+        # libQnnHtpPrepare.so
+        prepare_path = source_base / "lib/aarch64-android/libQnnHtpPrepare.so"
+        if prepare_path.exists():
+            shutil.copy2(prepare_path, dest_dir / "libQnnHtpPrepare.so")
 
     print("Done!")
 
