@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare Qualcomm MobileNet-v2 LiteRT AOT assets for Snapdragon SM8850."""
+"""Prepare Qualcomm MobileNet-v2 LiteRT AOT assets for Snapdragon sm8750."""
 
 from __future__ import annotations
 
@@ -14,11 +14,11 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BUILD_DIR = ROOT / "build" / "aot_sm8850"
+BUILD_DIR = ROOT / "build" / "aot_sm8750"
 ASSETS_DIR = ROOT / "app" / "src" / "main" / "assets"
 MODEL_ZIP = BUILD_DIR / "mobilenet_v2-tflite-float.zip"
 EXTRACT_DIR = BUILD_DIR / "mobilenet_v2-tflite-float"
-AI_PACK_NAME = "mobilenet_v2_sm8850"
+AI_PACK_NAME = "mobilenet_v2_sm8750"
 AI_PACK_ROOT = ROOT / "ai_pack"
 AI_PACK_DIR = AI_PACK_ROOT / AI_PACK_NAME
 AI_PACK_MTK_DIR = AI_PACK_ROOT / f"{AI_PACK_NAME}_mtk"
@@ -121,7 +121,7 @@ def ensure_ai_pack_gradle() -> None:
   build_file.write_text(
     'plugins { id("com.android.ai-pack") }\n\n'
     "aiPack {\n"
-    '  packName = "mobilenet_v2_sm8850"\n'
+    '  packName = "mobilenet_v2_sm8750"\n'
     '  dynamicDelivery { deliveryType = "on-demand" }\n'
     "}\n",
     encoding="utf-8",
@@ -143,10 +143,10 @@ def copy_device_targeting_config() -> None:
 def compile_aot(model_path: Path) -> None:
   aot_lib, ai_pack_export, fallback_backend, qnn_target = import_aot_packages()
   target = [
-    qnn_target.Target(qnn_target.SocModel.SM8850),
+    qnn_target.Target(qnn_target.SocModel.sm8750),
     fallback_backend.FallbackTarget(),
   ]
-  print("Running LiteRT AOT compilation for Qualcomm SM8850")
+  print("Running LiteRT AOT compilation for Qualcomm sm8750")
   compiled_models = aot_lib.aot_compile(
     str(model_path),
     target=target,

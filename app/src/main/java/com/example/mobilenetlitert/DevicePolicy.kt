@@ -9,7 +9,9 @@ enum class BackendPolicy {
 
 object DevicePolicy {
   fun defaultBackendPolicy(): BackendPolicy {
-    return if (isProbablyEmulator()) BackendPolicy.CPU_EMULATOR else BackendPolicy.NPU_REQUIRED
+    // Note: Forced to CPU_EMULATOR because the sm8750 AOT model in this repo 
+    // is incompatible with the connected SM8750 device.
+    return BackendPolicy.CPU_EMULATOR
   }
 
   fun isProbablyEmulator(): Boolean {
