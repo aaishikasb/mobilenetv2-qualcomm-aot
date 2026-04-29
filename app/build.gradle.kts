@@ -7,9 +7,6 @@ plugins {
   alias(libs.plugins.undercouch.download)
 }
 
-val enableNpu =
-  providers.gradleProperty("enableNpu").map(String::toBoolean).orElse(false).get()
-
 android {
   namespace = "com.example.mobilenetlitert"
   compileSdk = 36
@@ -23,12 +20,6 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
-
-    if (enableNpu) {
-      ndk { abiFilters.add("arm64-v8a") }
-    }
-
-    buildConfigField("boolean", "NPU_PACK_ENABLED", enableNpu.toString())
   }
 
   buildTypes {
@@ -55,22 +46,6 @@ android {
   packaging {
     jniLibs { useLegacyPackaging = true }
     resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-  }
-
-  if (enableNpu) {
-    /*
-    assetPacks.add(":ai_pack:mobilenet_v2_sm8750")
-
-    dynamicFeatures.add(":litert_npu_runtime_libraries:qualcomm_runtime_v81")
-
-    bundle {
-      deviceTargetingConfig = file("device_targeting_configuration.xml")
-      deviceGroup {
-        enableSplit = false
-        defaultGroup = "other"
-      }
-    }
-    */
   }
 }
 
@@ -118,7 +93,6 @@ tasks.named("preBuild") {
 }
 
 dependencies {
-  implementation(libs.android.play.ai.delivery)
   implementation(libs.androidx.activity.compose)
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.core.ktx)
@@ -131,12 +105,6 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.litert)
-
-  /*
-  if (enableNpu) {
-    implementation(project(":litert_npu_runtime_libraries:runtime_strings"))
-  }
-  */
 
   testImplementation(libs.junit)
   debugImplementation(libs.androidx.ui.tooling)

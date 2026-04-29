@@ -8,9 +8,6 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.BuiltinNpuAcceleratorProvider
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.Environment
-import com.google.ai.edge.litert.ModelSelector
-import com.google.ai.edge.litert.NpuCompatibilityChecker
-import com.google.ai.edge.litert.deployment.AiPackModelProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -29,7 +26,7 @@ class MobilenetClassifier(private val context: Context) : AutoCloseable {
         System.loadLibrary("QnnSystem")
         System.loadLibrary("QnnHtp")
         Log.i(TAG, "Qualcomm libraries loaded successfully")
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
         Log.w(TAG, "Failed to pre-load Qualcomm libraries: ${e.message}")
       }
 
@@ -102,76 +99,20 @@ class MobilenetClassifier(private val context: Context) : AutoCloseable {
     return ModelSession(compiledModel, "GPU")
   }
 
-  private suspend fun initializeNpu(): ModelSession {
+  private fun initializeNpu(): ModelSession {
     val env = Environment.create(BuiltinNpuAcceleratorProvider(context))
 
-    // Try loading from local assets first (convenient for local testing/adb install)
-    val localNpuAsset = "model/mobilenet_v2_npu.tflite"
-    val assetExists = context.assets.list("model")?.contains("mobilenet_v2_npu.tflite") == true
-    
-    if (assetExists) {
-      Log.i(TAG, "Loading NPU model from local assets: $localNpuAsset")
-      try {
-        val options = CompiledModel.Options(setOf(Accelerator.NPU)).apply {
-          qualcommOptions = CompiledModel.QualcommOptions(
-            htpPerformanceMode = CompiledModel.QualcommOptions.HtpPerformanceMode.HIGH_PERFORMANCE
-          )
-        }
-        val compiledModel = CompiledModel.create(context.assets, localNpuAsset, options, env)
-        Log.i(TAG, "NPU model created successfully from local assets (AOT)")
-        return ModelSession(compiledModel, "NPU (AOT)")
-      } catch (e: Exception) {
-        Log.e(TAG, "Failed to create NPU model from local assets: ${e.message}", e)
-      }
-    }
-
-    // Try JIT with float model
     Log.i(TAG, "Trying JIT compilation on NPU with float model: $CPU_MODEL_ASSET")
-    try {
-      val options = CompiledModel.Options(setOf(Accelerator.NPU)).apply {
-        qualcommOptions = CompiledModel.QualcommOptions(
-          htpPerformanceMode = CompiledModel.QualcommOptions.HtpPerformanceMode.HIGH_PERFORMANCE
-        )
-      }
-      val compiledModel = CompiledModel.create(context.assets, CPU_MODEL_ASSET, options, env)
-      Log.i(TAG, "NPU model created successfully with JIT")
-      return ModelSession(compiledModel, "NPU (JIT)")
-    } catch (e: Exception) {
-      Log.e(TAG, "Failed to create NPU model with JIT: ${e.message}", e)
-    }
-
-    // Fallback to AI Pack if local asset is missing
-    if (!BuildConfig.NPU_PACK_ENABLED) {
-      error(
-        "NPU is required on this device, but no local NPU asset was found and this APK was built without the sm8750 AI Pack."
+    val options = CompiledModel.Options(setOf(Accelerator.NPU)).apply {
+      qualcommOptions = CompiledModel.QualcommOptions(
+        htpPerformanceMode = CompiledModel.QualcommOptions.HtpPerformanceMode.HIGH_PERFORMANCE
       )
     }
 
-    if (!NpuCompatibilityChecker.Qualcomm.isDeviceSupported()) {
-      error("Qualcomm NPU is required, but this device is not reported as supported.")
-    }
-
-    val modelProvider =
-      AiPackModelProvider(context, AI_PACK_NAME, AI_PACK_MODEL_PATH) {
-        setOf(Accelerator.NPU)
-      }
-    val selectedModel = ModelSelector(modelProvider).selectModel(env)
-    val accelerators = selectedModel.getCompatibleAccelerators()
-    if (!accelerators.contains(Accelerator.NPU)) {
-      error("AI Pack did not expose an NPU-compatible model for this device.")
-    }
-
-    val options =
-      CompiledModel.Options(accelerators).apply {
-        qualcommOptions =
-          CompiledModel.QualcommOptions(
-            htpPerformanceMode = CompiledModel.QualcommOptions.HtpPerformanceMode.HIGH_PERFORMANCE
-          )
-      }
-
-    val compiledModel = CompiledModel.create(selectedModel.getPath(), options, env)
-    Log.i(TAG, "Selected model source=AI Pack $AI_PACK_NAME/${selectedModel.getPath()} accelerators=$accelerators")
-    return ModelSession(compiledModel, "NPU (AI Pack)")
+    val compiledModel = CompiledModel.create(context.assets, CPU_MODEL_ASSET, options, env)
+    Log.i(TAG, "Selected model source=assets/$CPU_MODEL_ASSET accelerators=[NPU]")
+    Log.i(TAG, "NPU model created successfully with JIT")
+    return ModelSession(compiledModel, "NPU (JIT)")
   }
 
   private fun loadLabels(): List<String> {
@@ -208,7 +149,5 @@ class MobilenetClassifier(private val context: Context) : AutoCloseable {
     const val TAG = "MobileNetLiteRT"
     private const val CPU_MODEL_ASSET = "model/mobilenet_v2_float.tflite"
     private const val LABELS_ASSET = "labels/imagenet_labels.txt"
-    private const val AI_PACK_NAME = "mobilenet_v2_sm8750"
-    private const val AI_PACK_MODEL_PATH = "model/mobilenet_v2_float.tflite"
   }
 }
